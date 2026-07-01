@@ -172,7 +172,7 @@
             <div class="opt-row"><span class="lbl">ドキュメント追加<small>100ファイル単位</small></span>
               <div class="stepper"><button data-opt="doc" data-d="-1">−</button><span class="v" id="v-doc">0</span><button data-opt="doc" data-d="1">＋</button></div></div>
           </div>
-          <details class="grp" style="margin-top:4px"><summary>詳細設定（基本パッケージ費用）<span class="chev">▸</span></summary>
+          <details class="grp" style="margin-top:4px"><summary>基本パッケージ費用<span class="chev">▸</span></summary>
             <div class="grp-body">
               <div class="field"><label>初期費用（一括・円）</label><input type="number" id="c-init" value="500000" step="50000"></div>
               <div class="field"><label>Teams連携（一括・円）</label><input type="number" id="c-teams" value="500000" step="50000"></div>
@@ -182,29 +182,27 @@
               <div class="field"><label>追加オプション単価（円/月）</label><input type="number" id="c-optunit" value="50000" step="10000"></div>
             </div>
           </details>
+          <details class="grp" style="margin-top:4px"><summary>回答支援機能<span class="chev">▸</span></summary>
+            <div class="grp-body">
+              <p class="note" style="margin-top:0">AIが回答を支援し、有人対応の工数を短縮する機能。<b>費用と削減効果の両方</b>に反映されます。</p>
+              <div class="field"><label>利用する？</label>
+                <div class="toggle" id="supToggle"><button data-sup="1" class="on">利用する</button><button data-sup="0">利用しない</button></div></div>
+              <div class="field"><label>開始（年月）</label><div class="two"><select id="supSy"></select><select id="supSm"></select></div></div>
+              <div class="field"><label>月額（円）</label><input type="number" id="supFee" value="150000" step="10000"></div>
+              <div class="field"><label>有人対応の短縮率（%）<span class="hint">残りの有人対応時間を短縮</span></label><input type="number" id="supRed" value="35" min="0" max="100"></div>
+            </div>
+          </details>
+          <details class="grp" style="margin-top:4px"><summary>追加機能（費用のみ・自由入力）<span class="chev">▸</span></summary>
+            <div class="grp-body">
+              <p class="note" style="margin-top:0">開始年月・初期費用・月額・終了を自由に登録（費用側のみ反映）。</p>
+              <div id="featList"></div>
+              <button class="addbtn" id="addFeat">＋ 機能を追加</button>
+            </div>
+          </details>
         </div>
       </details></div>
 
-      <div class="card"><details class="grp"><summary>回答支援機能<span class="chev">▸</span></summary>
-        <div class="grp-body">
-          <p class="note" style="margin-top:0">AIが回答を支援し、有人対応の工数を短縮する機能。<b>費用と削減効果の両方</b>に反映されます。</p>
-          <div class="field"><label>利用する？</label>
-            <div class="toggle" id="supToggle"><button data-sup="1" class="on">利用する</button><button data-sup="0">利用しない</button></div></div>
-          <div class="field"><label>開始（年月）</label><div class="two"><select id="supSy"></select><select id="supSm"></select></div></div>
-          <div class="field"><label>月額（円）</label><input type="number" id="supFee" value="150000" step="10000"></div>
-          <div class="field"><label>有人対応の短縮率（%）<span class="hint">残りの有人対応時間を短縮</span></label><input type="number" id="supRed" value="35" min="0" max="100"></div>
-        </div>
-      </details></div>
-
-      <div class="card"><details class="grp"><summary>追加機能（費用のみ・自由入力）<span class="chev">▸</span></summary>
-        <div class="grp-body">
-          <p class="note" style="margin-top:0">開始年月・初期費用・月額・終了を自由に登録（費用側のみ反映）。</p>
-          <div id="featList"></div>
-          <button class="addbtn" id="addFeat">＋ 機能を追加</button>
-        </div>
-      </details></div>
-
-      <div class="card"><details class="grp" open><summary>削減効果の前提（対応側）<span class="chev">▸</span></summary>
+      <div class="card"><details class="grp" open><summary>対応側の効果<span class="chev">▸</span></summary>
         <div class="grp-body">
           <p class="sublabel">問い合わせに<b>対応する側</b>（情シス・ヘルプデスク等）の工数削減</p>
           <div class="field"><label>月間問い合わせ件数<span class="hint">件 / 月</span></label><input type="number" id="qtyMonth" value="1000" step="10"></div>
@@ -223,7 +221,7 @@
         </div>
       </details></div>
 
-      <div class="card"><details class="grp" open><summary>ユーザー側の効果（ROIに合算）<span class="chev">▸</span></summary>
+      <div class="card"><details class="grp" open><summary>ユーザー側の効果<span class="chev">▸</span></summary>
         <div class="grp-body">
           <p class="sublabel">問い合わせを<b>するユーザー</b>（社員）側の時間削減。指定年月から削減額に合算</p>
           <div class="field"><label>ROIに合算する？</label>
