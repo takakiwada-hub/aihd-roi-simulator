@@ -68,6 +68,9 @@
   .share input{flex:1;font-size:11px;color:var(--text3);padding:7px 9px;text-align:left;}
   .share button{padding:8px 12px;border:1px solid var(--blue);background:var(--white);color:var(--blue);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
   .share button:hover{background:var(--blueTint);}
+  .share button.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .share button.primary:hover{opacity:.9;background:var(--blue);}
+  .share button:disabled{opacity:.5;cursor:default;}
   #copyMsg{font-size:11px;color:var(--blue);min-width:70px;}
   .unitwrap{display:flex;align-items:center;gap:8px;}
   .unitwrap span{font-size:11px;color:var(--text3);}
@@ -137,6 +140,7 @@
   footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--borderGray);display:flex;justify-content:space-between;color:var(--text3);font-size:10px;}
   .note{font-size:11px;color:var(--text3);margin:10px 0 0;line-height:1.6;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -235,9 +239,11 @@
     <!-- 右：出力 -->
     <div>
       <div class="toprow">
-        <div class="share">
+        <div class="share" id="editorControls">
           <input id="shareUrl" readonly>
-          <button id="copyBtn">共有リンクをコピー</button><span id="copyMsg"></span>
+          <button id="copyBtn">共有リンクをコピー</button>
+          <button id="pptxBtn" class="primary">PowerPointに書き出し</button>
+          <span id="copyMsg"></span>
         </div>
         <div class="unitwrap"><span>表示単位</span>
           <div class="toggle" id="unitToggle"><button data-unit="1">円</button><button data-unit="10000" class="on">万円</button></div></div>
@@ -343,9 +349,11 @@ const U=()=>state.unit===10000?"万円":"円";
 function signed(n){const s=fmt(Math.abs(n));return n<0?("▲"+s):("+"+s);}
 
 /* ===== 共有URL ===== */
+const IS_VIEWER=(location.hash.indexOf("d=")>=0);
 function collect(){const inp={};INPUT_IDS.forEach(id=>inp[id]=document.getElementById(id).value);return {s:state,inp,f:features};}
 function encodeShare(){return encodeURIComponent(JSON.stringify(collect()));}
-function updateHash(){try{history.replaceState(null,"","#d="+encodeShare());}catch(e){}const el=document.getElementById("shareUrl");if(el)el.value=location.href;}
+function shareUrl(){return location.origin+location.pathname+"#d="+encodeShare();}
+function updateShareUrl(){if(IS_VIEWER)return;const el=document.getElementById("shareUrl");if(el)el.value=shareUrl();}
 function syncUI(){
   document.getElementById("startYear").value=state.startYear;
   document.getElementById("startMonth").value=state.startMonth;
@@ -361,10 +369,100 @@ function applyShare(str){try{const o=JSON.parse(decodeURIComponent(str));
   if(o.inp)INPUT_IDS.forEach(id=>{if(o.inp[id]!==undefined)document.getElementById(id).value=o.inp[id];});
   syncUI();
 }catch(e){}}
-document.getElementById("copyBtn").onclick=()=>{updateHash();const el=document.getElementById("shareUrl");el.select();
+document.getElementById("copyBtn").onclick=()=>{const url=shareUrl();const el=document.getElementById("shareUrl");el.value=url;el.select();
   const done=()=>{const m=document.getElementById("copyMsg");m.textContent="コピーしました";setTimeout(()=>m.textContent="",1800);};
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(()=>{try{document.execCommand("copy");done();}catch(e){}});}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>{try{document.execCommand("copy");done();}catch(e){}});}
   else{try{document.execCommand("copy");done();}catch(e){}}};
+
+/* ===== PPTX書き出し（画面表示をそのままスライド化） ===== */
+function svgToPng(svgEl,scale){scale=scale||2;return new Promise((res,rej)=>{
+  const clone=svgEl.cloneNode(true);const vb=(clone.getAttribute("viewBox")||"0 0 720 300").split(/\s+/);
+  const w=+vb[2],h=+vb[3];clone.setAttribute("width",w);clone.setAttribute("height",h);
+  const xml=new XMLSerializer().serializeToString(clone);
+  const src="data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(xml)));
+  const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=w*scale;c.height=h*scale;
+    const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+    res({data:c.toDataURL("image/png"),w,h});};img.onerror=rej;img.src=src;});}
+
+function assumptionText(){
+  return `${state.plan}万円プラン・Web${state.web?'有':'無'}　|　対応側 ${num("qtyMonth").toLocaleString()}件/月×${num("minPerCase")}分×¥${num("wage").toLocaleString()}`+
+    `　|　回答支援 ${state.sup?state.supSy+'/'+state.supSm+'〜':'なし'}　|　`+
+    `ユーザー側 ${state.roll?num("empCount").toLocaleString()+'名×'+num("empMinDay")+'分/日×'+num("empRate")+'%（'+state.rollSy+'/'+state.rollSm+'〜合算）':'参考のみ'}　|　導入 ${state.startYear}/${state.startMonth}`;
+}
+
+async function exportPPTX(){
+  const cs=costSeries();
+  const cost3=cs.cumCost(36),ben3=cumBenefit(36),net3=ben3-cost3,pb=payback(cs),roi=cost3>0?Math.round(net3/cost3*100):0;
+  const deptA=deptMonthly(12)*12,dept3=cumDept(36),userA=empMonthly()*12,user3=cumUser(36);
+  const un=U();
+  const pptx=new PptxGenJS();pptx.layout="LAYOUT_WIDE";const F="Meiryo";
+  const RECT=pptx.ShapeType.rect;
+  const chrome=(s,title,sub)=>{
+    s.background={color:"FFFFFF"};
+    s.addShape(RECT,{x:0.5,y:0.46,w:0.09,h:0.44,fill:{color:"1599C5"}});
+    s.addText(title,{x:0.72,y:0.4,w:12,h:0.55,fontSize:22,bold:true,color:"111111",fontFace:F});
+    if(sub)s.addText(sub,{x:0.74,y:0.98,w:12.3,h:0.35,fontSize:10.5,color:"777777",fontFace:F});
+    s.addText("Confidential",{x:0.5,y:7.08,w:4,h:0.3,fontSize:9,color:"AAAAAA",fontFace:F});
+    s.addText("© PKSHA Technology Inc.",{x:8.9,y:7.08,w:3.9,h:0.3,fontSize:9,color:"AAAAAA",align:"right",fontFace:F});
+  };
+
+  // ---- Slide1: 結論 ----
+  const s1=pptx.addSlide();chrome(s1,"PKSHA AIヘルプデスク 費用対効果サマリー",assumptionText());
+  const hero=[["投資回収",pb?pb+" ヶ月目":"3年内未回収"],["3年 ROI",(roi>=0?"+":"")+roi+" %"],["3年 純便益",signed(net3)+" "+un]];
+  hero.forEach((d,i)=>{const x=0.72+i*4.12;
+    s1.addShape(RECT,{x,y:1.55,w:3.9,h:1.55,fill:{color:"1599C5"}});
+    s1.addText(d[0],{x:x+0.25,y:1.72,w:3.5,h:0.35,fontSize:12,color:"FFFFFF",fontFace:F});
+    s1.addText(d[1],{x:x+0.25,y:2.1,w:3.5,h:0.85,fontSize:26,bold:true,color:"FFFFFF",fontFace:F});});
+  s1.addText("費用",{x:0.72,y:3.4,w:4,h:0.3,fontSize:12,bold:true,color:"1599C5",fontFace:F});
+  const costD=[["初期費用","¥"+fmt(cs.initLump)+" "+un],["基本月額","¥"+fmt(cs.aihd)+" "+un+"/月"],["3年累計コスト","¥"+fmt(cost3)+" "+un]];
+  costD.forEach((d,i)=>{const x=0.72+i*4.12;
+    s1.addShape(RECT,{x,y:3.75,w:3.9,h:1.15,fill:{color:"EAF5FB"},line:{color:"C2E4F2",width:1}});
+    s1.addText(d[0],{x:x+0.25,y:3.9,w:3.5,h:0.3,fontSize:11,color:"777777",fontFace:F});
+    s1.addText(d[1],{x:x+0.25,y:4.22,w:3.5,h:0.5,fontSize:18,bold:true,color:"111111",fontFace:F});});
+  s1.addText("3年累計削減（対応側＋ユーザー側） ¥"+fmt(ben3)+" "+un,{x:0.72,y:5.2,w:12,h:0.4,fontSize:13,bold:true,color:"1599C5",fontFace:F});
+
+  // ---- Slide2: 効果とグラフ ----
+  const s2=pptx.addSlide();chrome(s2,"削減効果と投資回収の推移");
+  const eff=[["1年後の対応側効果","¥"+fmt(deptA)+" "+un+"/年","3年累計 ¥"+fmt(dept3)+" "+un,"問い合わせに対応する側（情シス等）の工数削減"],
+             ["全社展開後のユーザー側効果","¥"+fmt(userA)+" "+un+"/年","3年累計 ¥"+fmt(user3)+" "+un,"問い合わせをするユーザー（社員）側の時間削減"]];
+  eff.forEach((d,i)=>{const x=0.72+i*6.15;
+    s2.addShape(RECT,{x,y:1.4,w:5.85,h:1.55,fill:{color:"EAF5FB"},line:{color:"C2E4F2",width:1}});
+    s2.addText(d[0],{x:x+0.28,y:1.52,w:5.4,h:0.3,fontSize:12,bold:true,color:"111111",fontFace:F});
+    s2.addText(d[1],{x:x+0.28,y:1.85,w:5.4,h:0.5,fontSize:21,bold:true,color:"1599C5",fontFace:F});
+    s2.addText(d[2],{x:x+0.28,y:2.4,w:5.4,h:0.3,fontSize:11,color:"444444",fontFace:F});
+    s2.addText(d[3],{x:x+0.28,y:2.66,w:5.4,h:0.3,fontSize:9,color:"777777",fontFace:F});});
+  s2.addText("累計コスト vs 累計削減額（3年）",{x:0.72,y:3.15,w:12,h:0.3,fontSize:12,bold:true,color:"111111",fontFace:F});
+  const svg=document.querySelector("#chart svg");
+  if(svg){const im=await svgToPng(svg,2);const iw=9.4,ih=iw*(im.h/im.w);s2.addImage({data:im.data,x:(13.33-iw)/2,y:3.5,w:iw,h:ih});}
+
+  // ---- Slide3: フェーズ別表 ----
+  const s3=pptx.addSlide();chrome(s3,"フェーズ別 費用対効果");
+  const hd=["","自己解決率","対応側削減("+un+")","ユーザー側効果("+un+")","累計削減計("+un+")","累計コスト("+un+")","累計損益("+un+")"]
+    .map(t=>({text:t,options:{bold:true,color:"FFFFFF",fill:{color:"1599C5"},align:"center",fontSize:10,valign:"middle"}}));
+  const rows=[hd];
+  [3,6,12,24,36].forEach(m=>{const d=cumDept(m),e=cumUser(m),b=d+e,c=cs.cumCost(m),net=b-c;
+    rows.push([
+      {text:m+"ヶ月",options:{bold:true,align:"left"}},
+      {text:Math.round(rateAt(m)*100)+"%",options:{align:"center"}},
+      {text:fmt(d),options:{align:"right"}},
+      {text:e>0?fmt(e):"–",options:{align:"right",color:"1599C5"}},
+      {text:fmt(b),options:{align:"right"}},
+      {text:fmt(c),options:{align:"right"}},
+      {text:signed(net),options:{align:"right",bold:true,color:net>=0?"1599C5":"677070"}},
+    ]);});
+  s3.addTable(rows,{x:0.72,y:1.6,w:11.9,fontFace:F,fontSize:11,border:{type:"solid",color:"E9E9E9",pt:0.5},valign:"middle",rowH:0.5,color:"333333"});
+  s3.addText("投資回収＝累計削減（対応側＋ユーザー側）が累計コストを初めて上回る月。前提： "+assumptionText(),{x:0.72,y:5.6,w:11.9,h:0.6,fontSize:9,color:"777777",fontFace:F});
+
+  const dt=new Date(),ymd=dt.getFullYear()+String(dt.getMonth()+1).padStart(2,"0")+String(dt.getDate()).padStart(2,"0");
+  await pptx.writeFile({fileName:"PKSHA_AIHD_費用対効果_"+ymd+".pptx"});
+}
+const pptxBtn=document.getElementById("pptxBtn");
+if(pptxBtn)pptxBtn.onclick=async()=>{
+  if(typeof PptxGenJS==="undefined"){alert("PowerPoint出力ライブラリの読み込み中です。数秒おいて再度お試しください。");return;}
+  pptxBtn.disabled=true;const t=pptxBtn.textContent;pptxBtn.textContent="作成中...";
+  try{await exportPPTX();}catch(e){alert("書き出しに失敗しました: "+(e&&e.message||e));}
+  pptxBtn.disabled=false;pptxBtn.textContent=t;
+};
 
 /* ===== 追加機能エディタ ===== */
 function yopt(sel,cont){let s=cont?`<option value=""${sel===""?" selected":""}>継続</option>`:"";for(let y=YR_MIN;y<=YR_MAX;y++)s+=`<option value="${y}"${+sel===y?" selected":""}>${y}年</option>`;return s;}
@@ -486,13 +584,14 @@ function render(){
   document.getElementById("phaseTable").innerHTML=phaseTable(cs);
   document.getElementById("years").innerHTML=monthlyCostTables(cs);
 
-  updateHash();
+  updateShareUrl();
 }
 
 (function init(){
   const h=location.hash||"";
   const i=h.indexOf("d=");
   if(i>=0)applyShare(h.slice(i+2));
+  if(IS_VIEWER){const ec=document.getElementById("editorControls");if(ec)ec.style.display="none";}
   renderFeatures();render();
 })();
 </script>
