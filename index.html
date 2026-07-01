@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PKSHA AIヘルプデスク 費用対効果シミュレーター</title>
+<style>
+  :root{--white:#FFFFFF;--lightGray:#EBEBEB;--paleGray:#F5F5F5;--borderGray:#E9E9E9;
+    --black:#000000;--text2:#444444;--text3:#777777;--blue:#1599C5;--blueTint:#EAF5FB;--blueBorder:#C2E4F2;--grayDark:#677070;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paleGray);color:var(--black);
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Helvetica Neue",Arial,sans-serif;font-size:14px;line-height:1.5;}
+  .wrap{max-width:1300px;margin:0 auto;padding:28px 22px 60px;}
+  header{position:relative;margin-bottom:22px;}
+  .title-row{display:flex;align-items:center;gap:12px;}
+  .title-bar{width:5px;height:30px;background:var(--blue);}
+  h1{font-size:21px;font-weight:700;margin:0;}
+  .sub{color:var(--text3);font-size:12px;margin:6px 0 0 17px;}
+  .tri{position:absolute;top:-6px;right:0;width:0;height:0;border-style:solid;border-width:0 56px 56px 0;border-color:transparent var(--lightGray) transparent transparent;}
+  .tri2{position:absolute;top:8px;right:14px;width:0;height:0;border-style:solid;border-width:0 26px 26px 0;border-color:transparent var(--blueBorder) transparent transparent;}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start;}
+  @media(max-width:920px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--white);border:1px solid var(--borderGray);border-radius:8px;padding:16px 18px;}
+  .card + .card{margin-top:14px;}
+  details.grp{margin:0;}
+  details.grp > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;padding-left:9px;border-left:4px solid var(--blue);}
+  details.grp > summary::-webkit-details-marker{display:none;}
+  details.grp > summary .chev{color:var(--blue);font-size:12px;font-weight:400;transition:transform .15s;}
+  details.grp[open] > summary .chev{transform:rotate(90deg);}
+  .grp-body{margin-top:14px;}
+  .grp-body details.grp > summary{font-size:12px;color:var(--text2);border-left-color:var(--blueBorder);}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:12px;color:var(--text2);font-weight:600;margin-bottom:5px;}
+  .field .hint{font-size:10px;color:var(--text3);font-weight:400;}
+  select,input[type=number],input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--borderGray);border-radius:6px;background:var(--white);font-size:14px;color:var(--black);}
+  input[type=number]{text-align:right;}
+  select:focus,input:focus{outline:none;border-color:var(--blue);}
+  select:disabled,input:disabled{background:var(--lightGray);color:var(--text3);}
+  .two{display:flex;gap:8px;}
+  .toggle{display:flex;gap:8px;}
+  .toggle button{flex:1;padding:9px 0;border:1px solid var(--borderGray);background:var(--white);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);}
+  .toggle button.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700;}
+  .opt-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;}
+  .opt-row .lbl{font-size:12px;color:var(--text2);flex:1;}
+  .opt-row .lbl small{display:block;color:var(--text3);font-size:10px;}
+  .stepper{display:flex;align-items:center;gap:6px;}
+  .stepper button{width:26px;height:26px;border:1px solid var(--borderGray);background:var(--white);border-radius:5px;cursor:pointer;font-size:15px;line-height:1;color:var(--blue);}
+  .stepper .v{min-width:22px;text-align:center;font-weight:700;}
+  .derived{margin-top:2px;padding:9px 11px;background:var(--blueTint);border-left:4px solid var(--blue);border-radius:4px;font-size:11px;color:var(--text2);}
+  .derived b{color:var(--black);}
+  .conv{font-size:10px;color:var(--text3);margin-top:5px;}
+  .sublabel{font-size:11px;color:var(--text3);margin:-4px 0 12px;}
+  .ms-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px 6px;align-items:center;font-size:11px;}
+  .ms-grid .h{color:var(--text3);font-weight:600;text-align:center;}
+  .ms-grid input{padding:5px 4px;font-size:11px;text-align:right;}
+  .feat-item{border:1px solid var(--borderGray);border-radius:6px;padding:12px;margin-bottom:10px;background:var(--paleGray);}
+  .fi-head{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+  .fi-head input{flex:1;font-weight:600;}
+  .fi-head .del{width:30px;height:32px;border:1px solid var(--borderGray);background:var(--white);border-radius:6px;cursor:pointer;color:var(--text3);}
+  .fi-field{margin-bottom:9px;}
+  .fi-field > span{display:block;font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px;}
+  .addbtn{width:100%;padding:9px 16px;border:1px dashed var(--blue);background:var(--blueTint);border-radius:6px;color:var(--blue);font-weight:700;font-size:13px;cursor:pointer;}
+
+  /* 右上バー */
+  .toprow{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .share{display:flex;gap:8px;align-items:center;flex:1;min-width:280px;}
+  .share input{flex:1;font-size:11px;color:var(--text3);padding:7px 9px;text-align:left;}
+  .share button{padding:8px 12px;border:1px solid var(--blue);background:var(--white);color:var(--blue);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .share button:hover{background:var(--blueTint);}
+  #copyMsg{font-size:11px;color:var(--blue);min-width:70px;}
+  .unitwrap{display:flex;align-items:center;gap:8px;}
+  .unitwrap span{font-size:11px;color:var(--text3);}
+  .unitwrap .toggle{width:150px;}
+
+  /* 結論ヘッドライン */
+  .hero{display:grid;grid-template-columns:repeat(3,1fr);background:var(--blue);color:#fff;border-radius:10px;padding:18px 8px;margin-bottom:14px;}
+  .hero .h{padding:2px 18px;border-right:1px solid rgba(255,255,255,.28);}
+  .hero .h:last-child{border-right:none;}
+  .hero .hk{font-size:11px;opacity:.9;margin-bottom:7px;}
+  .hero .hv{font-size:27px;font-weight:800;line-height:1.05;}
+  .hero .hv small{font-size:13px;font-weight:600;opacity:.9;}
+
+  /* 前提サマリーバー */
+  .assumebar{font-size:11px;color:var(--text2);background:var(--paleGray);border:1px solid var(--borderGray);border-radius:6px;padding:9px 13px;margin-bottom:16px;line-height:1.8;}
+  .assumebar b{color:var(--black);}
+  .assumebar .dot{color:var(--blueBorder);margin:0 6px;}
+
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+  .metric{background:var(--white);border:1px solid var(--borderGray);border-radius:8px;padding:13px 15px;}
+  .metric .k{font-size:11px;color:var(--text3);margin-bottom:6px;}
+  .metric .val{font-size:19px;font-weight:700;color:var(--black);}
+  .metric .val .yen{font-size:12px;font-weight:600;color:var(--text3);margin-right:2px;}
+  .metric .val small{font-size:11px;color:var(--text3);}
+
+  .ref{background:var(--blueTint);border:1px solid var(--blueBorder);border-radius:8px;padding:16px 18px;margin-bottom:16px;display:flex;gap:22px;flex-wrap:wrap;align-items:center;}
+  .ref .rl{flex:1;min-width:220px;}
+  .ref h3{font-size:13px;font-weight:700;margin:0 0 6px;color:var(--black);padding-left:9px;border-left:4px solid var(--blue);}
+  .ref .big{font-size:26px;font-weight:700;color:var(--blue);margin:2px 0;}
+  .ref .rr{min-width:200px;font-size:11px;color:var(--text2);line-height:1.7;border-left:1px solid var(--blueBorder);padding-left:18px;}
+  .ref .tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--blue);border-radius:4px;padding:2px 8px;margin-bottom:6px;}
+  .ref .tag.off{background:var(--grayDark);}
+  .effects{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+  @media(max-width:920px){.effects{grid-template-columns:1fr;}}
+  .effect{background:var(--blueTint);border:1px solid var(--blueBorder);border-radius:8px;padding:16px 18px;}
+  .effect .tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--blue);border-radius:4px;padding:2px 8px;margin-bottom:8px;}
+  .effect .tag.gray{background:var(--grayDark);}
+  .effect h3{font-size:13px;font-weight:700;margin:0 0 6px;color:var(--black);padding-left:9px;border-left:4px solid var(--blue);}
+  .effect .big{font-size:24px;font-weight:700;color:var(--blue);margin:2px 0;}
+  .effect .big small{font-size:13px;font-weight:600;color:var(--text2);}
+  .effect .sub{font-size:12px;color:var(--text2);}
+  .effect .formula{font-size:11px;color:var(--text2);margin-top:9px;line-height:1.7;border-top:1px solid var(--blueBorder);padding-top:8px;}
+
+  .panel{background:var(--white);border:1px solid var(--borderGray);border-radius:8px;padding:16px 18px;margin-bottom:16px;}
+  .panel h3{font-size:13px;font-weight:700;margin:0 0 12px;padding-left:9px;border-left:4px solid var(--blue);}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-bottom:6px;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:18px;height:0;border-top-width:2.5px;border-top-style:solid;display:inline-block;}
+  table{border-collapse:collapse;width:100%;font-size:12px;}
+  th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--borderGray);}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{color:var(--text3);font-weight:600;font-size:11px;}
+  tbody tr.tot td{font-weight:700;border-top:1.5px solid var(--blue);color:var(--black);}
+  .pos{color:var(--blue);font-weight:700;}
+  .minus{color:var(--grayDark);font-weight:700;}
+  .emcol{color:var(--blue);}
+  details.mtbl{background:var(--white);border:1px solid var(--borderGray);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+  details.mtbl > summary{cursor:pointer;font-size:13px;font-weight:700;padding-left:9px;border-left:4px solid var(--blue);list-style:none;}
+  details.mtbl > summary::-webkit-details-marker{display:none;}
+  .mtbl .yb{overflow-x:auto;margin-top:14px;}
+  .mtbl table{font-size:10px;white-space:nowrap;}
+  .mtbl th,.mtbl td{padding:5px 7px;}
+  .mtbl th:first-child,.mtbl td:first-child{position:sticky;left:0;background:var(--white);min-width:96px;font-weight:600;}
+  .mtbl tr.custom td:first-child{border-left:3px solid var(--blue);color:var(--blue);}
+  .mtbl tr.tot td{font-weight:700;border-top:1.5px solid var(--blue);color:var(--black);}
+  .mtbl td.z{color:var(--lightGray);}
+  footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--borderGray);display:flex;justify-content:space-between;color:var(--text3);font-size:10px;}
+  .note{font-size:11px;color:var(--text3);margin:10px 0 0;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tri"></div><div class="tri2"></div>
+    <div class="title-row"><div class="title-bar"></div><h1>PKSHA AIヘルプデスク 費用対効果シミュレーター</h1></div>
+    <p class="sub">費用・削減効果・投資回収を一体で試算。対応側とユーザー側の効果を合算できます</p>
+  </header>
+
+  <div class="grid">
+    <!-- 左：入力 -->
+    <div>
+      <div class="card"><details class="grp" open><summary>費用条件<span class="chev">▸</span></summary>
+        <div class="grp-body">
+          <div class="field"><label>導入開始</label><div class="two"><select id="startYear"></select><select id="startMonth"></select></div></div>
+          <div class="field"><label>プラン</label>
+            <select id="plan">
+              <option value="40" selected>40万円プラン（FAQ500 / 文書100 / アカウント10）</option>
+              <option value="60">60万円プラン（FAQ1500 / 文書500 / アカウント20）</option>
+              <option value="100">100万円プラン（FAQ2500 / 文書1000 / アカウント100）</option>
+            </select></div>
+          <div class="field"><label>Web画面設定</label>
+            <div class="toggle" id="webToggle"><button data-web="1" class="on">付ける（初期+50万）</button><button data-web="0">付けない</button></div></div>
+          <div class="field"><label>追加オプション（各 +50,000円/月）</label>
+            <div class="opt-row"><span class="lbl">有人チャット・管理アカウント<small>10アカウント単位</small></span>
+              <div class="stepper"><button data-opt="mgmt" data-d="-1">−</button><span class="v" id="v-mgmt">0</span><button data-opt="mgmt" data-d="1">＋</button></div></div>
+            <div class="opt-row"><span class="lbl">FAQ追加<small>100FAQ単位</small></span>
+              <div class="stepper"><button data-opt="faq" data-d="-1">−</button><span class="v" id="v-faq">0</span><button data-opt="faq" data-d="1">＋</button></div></div>
+            <div class="opt-row"><span class="lbl">ドキュメント追加<small>100ファイル単位</small></span>
+              <div class="stepper"><button data-opt="doc" data-d="-1">−</button><span class="v" id="v-doc">0</span><button data-opt="doc" data-d="1">＋</button></div></div>
+          </div>
+          <details class="grp" style="margin-top:4px"><summary>詳細設定（基本パッケージ費用）<span class="chev">▸</span></summary>
+            <div class="grp-body">
+              <div class="field"><label>初期費用（一括・円）</label><input type="number" id="c-init" value="500000" step="50000"></div>
+              <div class="field"><label>Teams連携（一括・円）</label><input type="number" id="c-teams" value="500000" step="50000"></div>
+              <div class="field"><label>Web画面設定（一括・円）</label><input type="number" id="c-web" value="500000" step="50000"></div>
+              <div class="field"><label>進行/活用支援（円/月）</label><input type="number" id="c-support" value="500000" step="50000"></div>
+              <div class="field"><label>進行/活用支援 月数</label><input type="number" id="c-supmonths" value="6" min="0" max="36"></div>
+              <div class="field"><label>追加オプション単価（円/月）</label><input type="number" id="c-optunit" value="50000" step="10000"></div>
+            </div>
+          </details>
+        </div>
+      </details></div>
+
+      <div class="card"><details class="grp"><summary>回答支援機能<span class="chev">▸</span></summary>
+        <div class="grp-body">
+          <p class="note" style="margin-top:0">AIが回答を支援し、有人対応の工数を短縮する機能。<b>費用と削減効果の両方</b>に反映されます。</p>
+          <div class="field"><label>利用する？</label>
+            <div class="toggle" id="supToggle"><button data-sup="1" class="on">利用する</button><button data-sup="0">利用しない</button></div></div>
+          <div class="field"><label>開始（年月）</label><div class="two"><select id="supSy"></select><select id="supSm"></select></div></div>
+          <div class="field"><label>月額（円）</label><input type="number" id="supFee" value="150000" step="10000"></div>
+          <div class="field"><label>有人対応の短縮率（%）<span class="hint">残りの有人対応時間を短縮</span></label><input type="number" id="supRed" value="35" min="0" max="100"></div>
+        </div>
+      </details></div>
+
+      <div class="card"><details class="grp"><summary>追加機能（費用のみ・自由入力）<span class="chev">▸</span></summary>
+        <div class="grp-body">
+          <p class="note" style="margin-top:0">開始年月・初期費用・月額・終了を自由に登録（費用側のみ反映）。</p>
+          <div id="featList"></div>
+          <button class="addbtn" id="addFeat">＋ 機能を追加</button>
+        </div>
+      </details></div>
+
+      <div class="card"><details class="grp" open><summary>削減効果の前提（対応側）<span class="chev">▸</span></summary>
+        <div class="grp-body">
+          <p class="sublabel">問い合わせに<b>対応する側</b>（情シス・ヘルプデスク等）の工数削減</p>
+          <div class="field"><label>月間問い合わせ件数<span class="hint">件 / 月</span></label><input type="number" id="qtyMonth" value="1000" step="10"></div>
+          <div class="field"><label>1件あたり対応時間<span class="hint">分 / 件</span></label><input type="number" id="minPerCase" value="20" step="1"></div>
+          <div class="field"><label>担当者の時給換算<span class="hint">円 / 時間</span></label><input type="number" id="wage" value="4000" step="100"></div>
+          <div class="derived" id="derived"></div>
+          <details class="grp" style="margin-top:14px"><summary>自己解決率マイルストーン（%）<span class="chev">▸</span></summary>
+            <div class="grp-body">
+              <div class="ms-grid">
+                <div class="h">3ヶ月</div><div class="h">6ヶ月</div><div class="h">12ヶ月</div><div class="h">24ヶ月</div><div class="h">36ヶ月</div>
+                <input type="number" id="r3" value="20"><input type="number" id="r6" value="30"><input type="number" id="r12" value="40"><input type="number" id="r24" value="50"><input type="number" id="r36" value="55">
+              </div>
+              <p class="note">各月の自己解決率はマイルストーン間を直線補間します。</p>
+            </div>
+          </details>
+        </div>
+      </details></div>
+
+      <div class="card"><details class="grp" open><summary>ユーザー側の効果（ROIに合算）<span class="chev">▸</span></summary>
+        <div class="grp-body">
+          <p class="sublabel">問い合わせを<b>するユーザー</b>（社員）側の時間削減。指定年月から削減額に合算</p>
+          <div class="field"><label>ROIに合算する？</label>
+            <div class="toggle" id="rollToggle"><button data-roll="1" class="on">合算する</button><button data-roll="0">参考のみ</button></div></div>
+          <div class="field"><label>ユーザー側効果 開始（年月）</label><div class="two"><select id="rollSy"></select><select id="rollSm"></select></div></div>
+          <div class="field"><label>対象従業員数（名）</label><input type="number" id="empCount" value="1000" step="100"></div>
+          <div class="field"><label>1人あたり調べもの削減時間<span class="hint">分 / 日</span></label><input type="number" id="empMinDay" value="5" step="1"><div class="conv" id="empConv"></div></div>
+          <div class="field"><label>適用率（%）</label><input type="number" id="empRate" value="40" min="0" max="100"></div>
+        </div>
+      </details></div>
+    </div>
+
+    <!-- 右：出力 -->
+    <div>
+      <div class="toprow">
+        <div class="share">
+          <input id="shareUrl" readonly>
+          <button id="copyBtn">共有リンクをコピー</button><span id="copyMsg"></span>
+        </div>
+        <div class="unitwrap"><span>表示単位</span>
+          <div class="toggle" id="unitToggle"><button data-unit="1">円</button><button data-unit="10000" class="on">万円</button></div></div>
+      </div>
+
+      <div class="assumebar" id="assumeBar"></div>
+      <div class="summary" id="summary"></div>
+      <div class="effects">
+        <div class="effect" id="deptBox"></div>
+        <div class="effect" id="userBox"></div>
+      </div>
+      <div class="hero" id="hero"></div>
+
+      <div class="panel">
+        <h3>累計コスト vs 累計削減額（3年）</h3>
+        <div class="legend">
+          <span><i style="border-color:var(--grayDark)"></i>累計コスト</span>
+          <span><i style="border-color:var(--blue)"></i>累計削減（対応側＋ユーザー側）</span>
+          <span><i style="border-color:var(--grayDark);border-top-style:dotted"></i>回答支援開始</span>
+          <span><i style="border-color:var(--blue);border-top-style:dotted"></i>全社展開</span>
+        </div>
+        <div id="chart"></div>
+      </div>
+
+      <div class="panel">
+        <h3>フェーズ別 費用対効果</h3>
+        <table id="phaseTable"></table>
+      </div>
+
+      <details class="mtbl"><summary>費用明細（3年・月次）を表示</summary><div id="years"></div></details>
+    </div>
+  </div>
+  <footer><span>Confidential</span><span>© PKSHA Technology Inc.</span></footer>
+</div>
+
+<script>
+const PLANS={ "40":{monthly:400000,faq:500,doc:100,acct:10},"60":{monthly:600000,faq:1500,doc:500,acct:20},"100":{monthly:1000000,faq:2500,doc:1000,acct:100}};
+const MONTH_LABELS=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const HORIZON=36, YR_MIN=2025, YR_MAX=2032, WD_WEEK=5, WD_MONTH=20;
+const INPUT_IDS=["qtyMonth","minPerCase","wage","r3","r6","r12","r24","r36","empCount","empMinDay","empRate","supFee","supRed","c-init","c-teams","c-web","c-support","c-supmonths","c-optunit"];
+const state={startYear:2026,startMonth:8,plan:"40",web:1,mgmt:0,faq:0,doc:0,sup:1,supSy:2027,supSm:2,roll:1,rollSy:2027,rollSm:8,unit:10000};
+let featSeq=1, features=[{id:1,name:"全社展開",sy:2027,sm:8,oneTime:0,monthly:200000,ey:"",em:8}];
+
+function fillYears(sel,val){for(let y=YR_MIN;y<=YR_MAX;y++){const o=document.createElement("option");o.value=y;o.textContent=y+"年";sel.appendChild(o);}sel.value=val;}
+function fillMonths(sel,val){for(let m=1;m<=12;m++){const o=document.createElement("option");o.value=m;o.textContent=m+"月";sel.appendChild(o);}sel.value=val;}
+fillYears(document.getElementById("startYear"),2026);fillMonths(document.getElementById("startMonth"),8);
+fillYears(document.getElementById("supSy"),2027);fillMonths(document.getElementById("supSm"),2);
+fillYears(document.getElementById("rollSy"),2027);fillMonths(document.getElementById("rollSm"),8);
+
+document.getElementById("startYear").onchange=e=>{state.startYear=+e.target.value;render();};
+document.getElementById("startMonth").onchange=e=>{state.startMonth=+e.target.value;render();};
+document.getElementById("supSy").onchange=e=>{state.supSy=+e.target.value;render();};
+document.getElementById("supSm").onchange=e=>{state.supSm=+e.target.value;render();};
+document.getElementById("rollSy").onchange=e=>{state.rollSy=+e.target.value;render();};
+document.getElementById("rollSm").onchange=e=>{state.rollSm=+e.target.value;render();};
+document.getElementById("plan").onchange=e=>{state.plan=e.target.value;render();};
+function tog(id,key,cast){document.getElementById(id).onclick=e=>{const b=e.target.closest("button");if(!b)return;state[key]=cast(b.dataset[Object.keys(b.dataset)[0]]);[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));render();};}
+tog("webToggle","web",Number);tog("supToggle","sup",Number);tog("rollToggle","roll",Number);tog("unitToggle","unit",Number);
+document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const k=b.dataset.opt,d=+b.dataset.d;state[k]=Math.max(0,state[k]+d);render();});
+INPUT_IDS.forEach(id=>document.getElementById(id).oninput=render);
+document.getElementById("addFeat").onclick=()=>{features.push({id:++featSeq,name:"",sy:state.startYear,sm:state.startMonth,oneTime:0,monthly:0,ey:"",em:state.startMonth});renderFeatures();render();};
+
+const num=id=>+document.getElementById(id).value||0;
+function importAbs(){return state.startYear*12+(state.startMonth-1);}
+function idxFrom(y,m){let i=(y*12+(m-1))-importAbs();return i<0?0:i;}
+function supStartIdx(){return idxFrom(state.supSy,state.supSm);}
+function rollStartIdx(){return idxFrom(state.rollSy,state.rollSm);}
+function annualHours(){return num("qtyMonth")*12*num("minPerCase")/60;}
+function empMonthlyHours(){return num("empMinDay")*WD_MONTH/60;}
+function empMonthly(){return num("empCount")*empMonthlyHours()*(num("empRate")/100)*num("wage");}
+
+function costSeries(){
+  const c={init:num("c-init"),teams:num("c-teams"),web:num("c-web"),support:num("c-support"),supMonths:Math.max(0,num("c-supmonths")),optUnit:num("c-optunit")};
+  const p=PLANS[state.plan], aihd=p.monthly+(state.mgmt+state.faq+state.doc)*c.optUnit, sIdx=supStartIdx(), supFee=num("supFee");
+  const rows=[]; const push=(l,fn,cu)=>{const v=[];for(let i=0;i<HORIZON;i++)v.push(fn(i));rows.push({label:l,vals:v,custom:!!cu});};
+  push("初期費用",i=>i===0?c.init:0);
+  push("Teams連携",i=>i===0?c.teams:0);
+  push("Web画面設定",i=>(i===0&&state.web)?c.web:0);
+  push("進行/活用支援",i=>i<c.supMonths?c.support:0);
+  push("AIHD利用料",()=>aihd);
+  if(state.sup)push("回答支援機能",i=>i>=sIdx?supFee:0);
+  const base=importAbs();
+  features.forEach(f=>{let s=(f.sy*12+(f.sm-1))-base;if(s<0)s=0;let e;if(f.ey===""||f.ey===null)e=HORIZON-1;else{e=(f.ey*12+(f.em-1))-base;if(e>HORIZON-1)e=HORIZON-1;if(e<s)e=HORIZON-1;}const ot=+f.oneTime||0,mo=+f.monthly||0;
+    push(f.name||"（無名の機能）",i=>{let v=0;if(s<=HORIZON-1){if(i===s)v+=ot;if(i>=s&&i<=e)v+=mo;}return v;},true);});
+  const monthly=i=>rows.reduce((a,r)=>a+r.vals[i],0);
+  const cumCost=m=>{let s=0;for(let i=0;i<m;i++)s+=monthly(i);return s;};
+  return {rows,aihd,monthly,cumCost,initLump:c.init+c.teams+(state.web?c.web:0)+c.support*c.supMonths,p};
+}
+
+function ms(){return {3:num("r3")/100,6:num("r6")/100,12:num("r12")/100,24:num("r24")/100,36:num("r36")/100};}
+function rateAt(m){const M=ms(),pts=[[0,0],[3,M[3]],[6,M[6]],[12,M[12]],[24,M[24]],[36,M[36]]];if(m>=36)return M[36];
+  for(let k=0;k<pts.length-1;k++){const[x0,y0]=pts[k],[x1,y1]=pts[k+1];if(m>=x0&&m<=x1)return y0+(y1-y0)*((m-x0)/(x1-x0));}return M[36];}
+function deptMonthly(m){const A=annualHours(),w=num("wage"),rate=rateAt(m),pm=A/12*w;let b=pm*rate;
+  if(state.sup){const start1=supStartIdx()+1,red=num("supRed")/100;if(m>=start1)b+=pm*(1-rate)*red;}return b;}
+function userMonthlyAt(m){if(!state.roll)return 0;const start1=rollStartIdx()+1;return m>=start1?empMonthly():0;}
+function cumDept(m){let s=0;for(let k=1;k<=m;k++)s+=deptMonthly(k);return s;}
+function cumUser(m){let s=0;for(let k=1;k<=m;k++)s+=userMonthlyAt(k);return s;}
+function cumBenefit(m){return cumDept(m)+cumUser(m);}
+function payback(cs){for(let m=1;m<=HORIZON;m++)if(cumBenefit(m)>=cs.cumCost(m))return m;return null;}
+
+function fmt(n){n=+n||0;if(state.unit===10000)return Math.round(n/10000).toLocaleString("ja-JP");return Math.round(n).toLocaleString("ja-JP");}
+const U=()=>state.unit===10000?"万円":"円";
+function signed(n){const s=fmt(Math.abs(n));return n<0?("▲"+s):("+"+s);}
+
+/* ===== 共有URL ===== */
+function collect(){const inp={};INPUT_IDS.forEach(id=>inp[id]=document.getElementById(id).value);return {s:state,inp,f:features};}
+function encodeShare(){return encodeURIComponent(JSON.stringify(collect()));}
+function updateHash(){try{history.replaceState(null,"","#d="+encodeShare());}catch(e){}const el=document.getElementById("shareUrl");if(el)el.value=location.href;}
+function syncUI(){
+  document.getElementById("startYear").value=state.startYear;
+  document.getElementById("startMonth").value=state.startMonth;
+  document.getElementById("supSy").value=state.supSy;document.getElementById("supSm").value=state.supSm;
+  document.getElementById("rollSy").value=state.rollSy;document.getElementById("rollSm").value=state.rollSm;
+  document.getElementById("plan").value=state.plan;
+  const setTog=(id,key)=>{[...document.getElementById(id).children].forEach(b=>b.classList.toggle("on",String(b.dataset[Object.keys(b.dataset)[0]])===String(state[key])));};
+  setTog("webToggle","web");setTog("supToggle","sup");setTog("rollToggle","roll");setTog("unitToggle","unit");
+}
+function applyShare(str){try{const o=JSON.parse(decodeURIComponent(str));
+  if(o.s)Object.assign(state,o.s);
+  if(Array.isArray(o.f)){features=o.f;featSeq=features.reduce((a,f)=>Math.max(a,+f.id||0),0);}
+  if(o.inp)INPUT_IDS.forEach(id=>{if(o.inp[id]!==undefined)document.getElementById(id).value=o.inp[id];});
+  syncUI();
+}catch(e){}}
+document.getElementById("copyBtn").onclick=()=>{updateHash();const el=document.getElementById("shareUrl");el.select();
+  const done=()=>{const m=document.getElementById("copyMsg");m.textContent="コピーしました";setTimeout(()=>m.textContent="",1800);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(()=>{try{document.execCommand("copy");done();}catch(e){}});}
+  else{try{document.execCommand("copy");done();}catch(e){}}};
+
+/* ===== 追加機能エディタ ===== */
+function yopt(sel,cont){let s=cont?`<option value=""${sel===""?" selected":""}>継続</option>`:"";for(let y=YR_MIN;y<=YR_MAX;y++)s+=`<option value="${y}"${+sel===y?" selected":""}>${y}年</option>`;return s;}
+function mopt(sel){let s="";for(let m=1;m<=12;m++)s+=`<option value="${m}"${+sel===m?" selected":""}>${m}月</option>`;return s;}
+function renderFeatures(){
+  const list=document.getElementById("featList");
+  if(!features.length){list.innerHTML='<div class="note" style="margin:0 0 10px">まだ登録がありません。</div>';return;}
+  list.innerHTML="";
+  features.forEach((f,idx)=>{const it=document.createElement("div");it.className="feat-item";
+    it.innerHTML=`<div class="fi-head"><input type="text" value="${(f.name||'').replace(/"/g,'&quot;')}" placeholder="機能名" data-k="name"><button class="del">×</button></div>
+      <div class="fi-field"><span>開始（年月）</span><div class="two"><select data-k="sy">${yopt(f.sy,false)}</select><select data-k="sm">${mopt(f.sm)}</select></div></div>
+      <div class="fi-field"><span>初期費用（円）</span><input type="number" value="${f.oneTime}" step="10000" data-k="oneTime"></div>
+      <div class="fi-field"><span>月額（円）</span><input type="number" value="${f.monthly}" step="10000" data-k="monthly"></div>
+      <div class="fi-field"><span>終了（年月・継続なら空欄）</span><div class="two"><select data-k="ey">${yopt(f.ey,true)}</select><select data-k="em"${f.ey===""?" disabled":""}>${mopt(f.em)}</select></div></div>`;
+    it.querySelectorAll("[data-k]").forEach(el=>{const k=el.dataset.k;const h=()=>{if(k==="name")f[k]=el.value;else if(k==="ey"){f.ey=el.value===""?"":+el.value;it.querySelector('[data-k="em"]').disabled=(f.ey==="");}else f[k]=el.value===""?"":+el.value;render();};if(el.tagName==="SELECT")el.onchange=h;else el.oninput=h;});
+    it.querySelector(".del").onclick=()=>{features.splice(idx,1);renderFeatures();render();};
+    list.appendChild(it);});
+}
+
+/* ===== グラフ：コスト vs 削減 ===== */
+function chart(cs){
+  const W=720,H=300,pad={l:56,r:16,t:12,b:28},iw=W-pad.l-pad.r,ih=H-pad.t-pad.b;
+  const cost=[],ben=[];for(let m=0;m<=36;m++){cost.push(cs.cumCost(m));ben.push(cumBenefit(m));}
+  const maxV=Math.max(...cost,...ben,1),X=m=>pad.l+iw*(m/36),Y=v=>pad.t+ih*(1-v/maxV);
+  const poly=a=>a.map((v,m)=>`${X(m).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const p=payback(cs);
+  // ギャップ塗り分け（回収前=赤字グレー / 回収後=黒字ブルー）
+  let areas="";
+  const cut=p!==null?p:(ben[36]>=cost[36]?0:36);
+  const seg=(a,b,to)=>{let s=`${X(a).toFixed(1)},${Y(cost[a]).toFixed(1)} `;
+    for(let m=a;m<=b;m++)s+=`${X(m).toFixed(1)},${Y(cost[m]).toFixed(1)} `;
+    for(let m=b;m>=a;m--)s+=`${X(m).toFixed(1)},${Y(ben[m]).toFixed(1)} `;return s;};
+  if(cut>0)areas+=`<polygon points="${seg(0,cut)}" fill="#677070" opacity="0.10"/>`;
+  if(cut<36)areas+=`<polygon points="${seg(cut,36)}" fill="#1599C5" opacity="0.13"/>`;
+  let grid="";for(let g=0;g<=4;g++){const v=maxV*g/4,y=Y(v);grid+=`<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#EBEBEB" stroke-width="1"/><text x="${pad.l-6}" y="${y+3}" font-size="9" fill="#777" text-anchor="end">${(v/10000).toLocaleString('ja-JP',{maximumFractionDigits:0})}</text>`;}
+  let xl="";for(let m=0;m<=36;m+=6)xl+=`<text x="${X(m)}" y="${H-8}" font-size="9" fill="#777" text-anchor="middle">${m}ヶ月</text>`;
+  let mk="";
+  if(state.sup){const su=supStartIdx()+1;if(su<=36)mk+=`<line x1="${X(su)}" y1="${pad.t}" x2="${X(su)}" y2="${pad.t+ih}" stroke="#677070" stroke-width="1" stroke-dasharray="1 3" opacity="0.7"/><text x="${X(su)+3}" y="${pad.t+22}" font-size="9" fill="#677070">回答支援</text>`;}
+  if(state.roll){const r=rollStartIdx()+1;if(r<=36)mk+=`<line x1="${X(r)}" y1="${pad.t}" x2="${X(r)}" y2="${pad.t+ih}" stroke="#1599C5" stroke-width="1" stroke-dasharray="2 3" opacity="0.7"/><text x="${X(r)+3}" y="${pad.t+10}" font-size="9" fill="#1599C5">全社展開</text>`;}
+  if(p)mk+=`<circle cx="${X(p)}" cy="${Y(ben[p])}" r="3.5" fill="#1599C5"/><text x="${X(p)+4}" y="${pad.t+ih-4}" font-size="9" fill="#677070">回収 ${p}ヶ月</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:760px"><text x="8" y="14" font-size="9" fill="#777">（万円）</text>${areas}${grid}${xl}${mk}
+    <polyline points="${poly(cost)}" fill="none" stroke="#677070" stroke-width="2.5"/>
+    <polyline points="${poly(ben)}" fill="none" stroke="#1599C5" stroke-width="2.5"/></svg>`;
+}
+
+function phaseTable(cs){
+  const mss=[3,6,12,24,36];let body="";
+  mss.forEach(m=>{const d=cumDept(m),e=cumUser(m),b=d+e,c=cs.cumCost(m),net=b-c;
+    body+=`<tr><td>${m}ヶ月</td><td>${Math.round(rateAt(m)*100)}%</td><td>${fmt(d)}</td><td class="emcol">${e>0?fmt(e):'–'}</td><td>${fmt(b)}</td><td>${fmt(c)}</td><td class="${net>=0?'pos':'minus'}">${signed(net)}</td></tr>`;});
+  return `<thead><tr><th></th><th>自己解決率</th><th>対応側削減</th><th class="emcol">ユーザー側効果</th><th>累計削減計</th><th>累計コスト</th><th>累計損益</th></tr></thead><tbody>${body}</tbody>`;
+}
+
+function monthlyCostTables(cs){
+  const heads=[];for(let i=0;i<HORIZON;i++)heads.push(MONTH_LABELS[(state.startMonth-1+i)%12]);
+  const yn=["初年度","2年度","3年度"];let html="";
+  for(let y=0;y<3;y++){let cols="<th></th>";for(let i=0;i<12;i++)cols+=`<th>${heads[y*12+i]}</th>`;cols+="<th>年度計</th>";
+    let body="";cs.rows.forEach(r=>{let t=`<td>${r.label}</td>`,yt=0;for(let i=0;i<12;i++){const v=r.vals[y*12+i];yt+=v;t+=v>0?`<td>${fmt(v)}</td>`:'<td class="z">–</td>';}t+=`<td>${yt>0?fmt(yt):'–'}</td>`;body+=`<tr class="${r.custom?'custom':''}">${t}</tr>`;});
+    let tr=`<td>合計</td>`,yt=0;for(let i=0;i<12;i++){const v=cs.monthly(y*12+i);yt+=v;tr+=`<td>${fmt(v)}</td>`;}tr+=`<td>${fmt(yt)}</td>`;body+=`<tr class="tot">${tr}</tr>`;
+    html+=`<div class="yb"><div style="font-weight:700;font-size:12px;margin-bottom:6px">${yn[y]}（${U()}）</div><table><thead><tr>${cols}</tr></thead><tbody>${body}</tbody></table></div>`;}
+  return html;
+}
+
+function render(){
+  document.getElementById("v-mgmt").textContent=state.mgmt;
+  document.getElementById("v-faq").textContent=state.faq;
+  document.getElementById("v-doc").textContent=state.doc;
+  ["supSy","supSm","supFee","supRed"].forEach(id=>document.getElementById(id).disabled=!state.sup);
+  ["rollSy","rollSm"].forEach(id=>document.getElementById(id).disabled=!state.roll);
+
+  const A=annualHours(),w=num("wage"),empMin=num("empMinDay");
+  document.getElementById("derived").innerHTML=`年間対応工数 ≒ <b>${Math.round(A).toLocaleString()}h/年</b>（${num("qtyMonth").toLocaleString()}件 × 12 × ${num("minPerCase")}分 ÷60）<br>100%自己解決時の上限効果 ≒ <b>¥${fmt(A*w)} ${U()}/年</b>`;
+  document.getElementById("empConv").innerHTML=`週換算 ${(empMin*WD_WEEK).toLocaleString()}分 ／ 月換算 ${Math.round(empMonthlyHours())}h（週${WD_WEEK}日・月${WD_MONTH}日換算）`;
+
+  const cs=costSeries();
+  const cost3=cs.cumCost(36),ben3=cumBenefit(36),net3=ben3-cost3,pb=payback(cs),roi=cost3>0?Math.round(net3/cost3*100):0;
+
+  // 費用サマリー
+  document.getElementById("summary").innerHTML=`
+    <div class="metric"><div class="k">初期費用</div><div class="val"><span class="yen">¥</span>${fmt(cs.initLump)}<small> ${U()}</small></div></div>
+    <div class="metric"><div class="k">基本月額</div><div class="val"><span class="yen">¥</span>${fmt(cs.aihd)}<small> ${U()}/月</small></div></div>
+    <div class="metric"><div class="k">3年累計コスト</div><div class="val"><span class="yen">¥</span>${fmt(cost3)}<small> ${U()}</small></div></div>`;
+
+  // 対応側効果（1年後）
+  const deptAnnual=deptMonthly(12)*12, dept3=cumDept(36), rate12=Math.round(rateAt(12)*100);
+  document.getElementById("deptBox").innerHTML=`
+    <span class="tag">ROIに合算中</span>
+    <h3>1年後の対応側効果（問い合わせに対応する側）</h3>
+    <div class="big">¥${fmt(deptAnnual)} <small>${U()}/年</small></div>
+    <div class="sub">3年累計 ¥${fmt(dept3)} ${U()}（12ヶ月時点 自己解決率 ${rate12}%）</div>
+    <div class="formula">対象 ${num("qtyMonth").toLocaleString()}件/月 × ${num("minPerCase")}分 × 時給${w.toLocaleString()}円（年間${Math.round(A).toLocaleString()}h）<br>
+    自己解決による削減${state.sup?' ＋ 回答支援機能による有人対応短縮':''}を計上。導入直後から立ち上がります。</div>`;
+
+  // ユーザー側効果（全社展開後）
+  const on=state.roll,userAnnual=empMonthly()*12,user3=cumUser(36);
+  document.getElementById("userBox").innerHTML=`
+    <span class="tag ${on?'':'gray'}">${on?'ROIに合算中':'参考のみ（未合算）'}</span>
+    <h3>全社展開後のユーザー側効果（問い合わせをする社員側）</h3>
+    <div class="big">¥${fmt(userAnnual)} <small>${U()}/年</small></div>
+    <div class="sub">3年累計 ¥${fmt(user3)} ${U()}（${on?state.rollSy+'年'+state.rollSm+'月〜':'開始月から'}）</div>
+    <div class="formula">対象 ${num("empCount").toLocaleString()}名 × 月${Math.round(empMonthlyHours())}h（${empMin}分/日）× 適用率${num("empRate")}% × 時給${w.toLocaleString()}円<br>
+    ${on?`<b style="color:var(--blue)">全社展開（${state.rollSy}年${state.rollSm}月）以降、毎月の削減に加算され投資回収を前倒しします。</b>`:'「合算する」をONにすると、指定月からROI本体に加算されます。'}</div>`;
+
+  // 結論ヘッドライン（投資回収）
+  document.getElementById("hero").innerHTML=`
+    <div class="h"><div class="hk">投資回収</div><div class="hv">${pb?pb+'<small> ヶ月目</small>':'3年内未回収'}</div></div>
+    <div class="h"><div class="hk">3年 ROI</div><div class="hv">${roi>=0?'+':''}${roi}<small> %</small></div></div>
+    <div class="h"><div class="hk">3年 純便益</div><div class="hv">${signed(net3)}<small> ${U()}</small></div></div>`;
+
+  // 前提サマリーバー
+  const D="<span class='dot'>|</span>";
+  document.getElementById("assumeBar").innerHTML=
+    `<b>${state.plan}万円プラン</b>・Web${state.web?'有':'無'}${D}`+
+    `対応側 <b>${num("qtyMonth").toLocaleString()}件/月</b>×${num("minPerCase")}分×¥${w.toLocaleString()}${D}`+
+    `回答支援 ${state.sup?`<b>${state.supSy}/${state.supSm}〜</b>`:'なし'}${D}`+
+    `ユーザー側 ${state.roll?`<b>${num("empCount").toLocaleString()}名</b>×${empMin}分/日×${num("empRate")}%（${state.rollSy}/${state.rollSm}〜合算）`:'参考のみ'}${D}`+
+    `導入 ${state.startYear}/${state.startMonth}`;
+
+  document.getElementById("chart").innerHTML=chart(cs);
+  document.getElementById("phaseTable").innerHTML=phaseTable(cs);
+  document.getElementById("years").innerHTML=monthlyCostTables(cs);
+
+  updateHash();
+}
+
+(function init(){
+  const h=location.hash||"";
+  const i=h.indexOf("d=");
+  if(i>=0)applyShare(h.slice(i+2));
+  renderFeatures();render();
+})();
+</script>
+</body>
+</html>
