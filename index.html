@@ -228,8 +228,8 @@
             <div class="toggle" id="rollToggle"><button data-roll="1" class="on">合算する</button><button data-roll="0">参考のみ</button></div></div>
           <div class="field"><label>ユーザー側効果 開始（年月）</label><div class="two"><select id="rollSy"></select><select id="rollSm"></select></div></div>
           <div class="field"><label>対象従業員数（名）</label><input type="number" id="empCount" value="1000" step="100"></div>
-          <div class="field"><label>1人あたり調べもの削減時間<span class="hint">分 / 日</span></label><input type="number" id="empMinDay" value="5" step="1"><div class="conv" id="empConv"></div></div>
-          <div class="field"><label>適用率（%）</label><input type="number" id="empRate" value="40" min="0" max="100"></div>
+          <div class="field"><label>導入前の1人あたり調べ物時間<span class="hint">分 / 日</span></label><input type="number" id="empMinDay" value="5" step="1"><div class="conv" id="empConv"></div></div>
+          <div class="field"><label>削減率（%）</label><input type="number" id="empRate" value="40" min="0" max="100"></div>
         </div>
       </details></div>
     </div>
@@ -385,7 +385,7 @@ function svgToPng(svgEl,scale){scale=scale||2;return new Promise((res,rej)=>{
 function assumptionText(){
   return `${state.plan}万円プラン・Web${state.web?'有':'無'}　|　対応側 ${num("qtyMonth").toLocaleString()}件/月×${num("minPerCase")}分×¥${num("wage").toLocaleString()}`+
     `　|　回答支援 ${state.sup?state.supSy+'/'+state.supSm+'〜':'なし'}　|　`+
-    `ユーザー側 ${state.roll?num("empCount").toLocaleString()+'名×'+num("empMinDay")+'分/日×'+num("empRate")+'%（'+state.rollSy+'/'+state.rollSm+'〜合算）':'参考のみ'}　|　導入 ${state.startYear}/${state.startMonth}`;
+    `ユーザー側 ${state.roll?num("empCount").toLocaleString()+'名×導入前'+num("empMinDay")+'分/日×削減率'+num("empRate")+'%（'+state.rollSy+'/'+state.rollSm+'〜合算）':'参考のみ'}　|　導入 ${state.startYear}/${state.startMonth}`;
 }
 
 async function exportPPTX(){
@@ -404,8 +404,63 @@ async function exportPPTX(){
     s.addText("© PKSHA Technology Inc.",{x:8.9,y:7.08,w:3.9,h:0.3,fontSize:9,color:"AAAAAA",align:"right",fontFace:F});
   };
 
-  // ---- Slide1: 結論 ----
-  const s1=pptx.addSlide();chrome(s1,"PKSHA AIヘルプデスク 費用対効果サマリー",assumptionText());
+  // ---- Slide1: 対応側の期待効果（前後比較・1年後） ----
+  const r12=rateAt(12), supRedV=state.sup?num("supRed")/100:0;
+  const bcnt=num("qtyMonth")*12, bhrs=annualHours(), bcost=bhrs*num("wage");
+  const acnt=bcnt*(1-r12), amin=num("minPerCase")*(1-supRedV), ahrs=acnt*amin/60, acost=ahrs*num("wage");
+  const cntPct=Math.round(r12*100), effHrs=bhrs-ahrs, effCost=bcost-acost;
+  const s2=pptx.addSlide();chrome(s2,"対応側の期待効果","問い合わせ対応の自動化で、年間 "+fmt(effCost)+" "+un+"のコスト削減と "+Math.round(effHrs).toLocaleString()+"時間の再配分");
+  s2.addText("導入前",{x:0.72,y:1.35,w:3.6,h:0.3,fontSize:12,color:"677070",align:"center",fontFace:F});
+  s2.addText("導入後（1年後）",{x:4.75,y:1.35,w:3.6,h:0.3,fontSize:12,color:"677070",align:"center",fontFace:F});
+  s2.addText("導入効果",{x:9.2,y:1.35,w:3.4,h:0.3,fontSize:12,bold:true,color:"0C447C",align:"center",fontFace:F});
+  const rowsA=[
+    ["問い合わせ件数",Math.round(bcnt).toLocaleString()+" 件/年",Math.round(acnt).toLocaleString()+" 件/年",cntPct+"% 削減"],
+    ["対応時間",Math.round(bhrs).toLocaleString()+" 時間/年",Math.round(ahrs).toLocaleString()+" 時間/年",Math.round(effHrs).toLocaleString()+" 時間 再配分"],
+    ["対応コスト",fmt(bcost)+" "+un+"/年",fmt(acost)+" "+un+"/年",fmt(effCost)+" "+un+" 削減"],
+  ];
+  rowsA.forEach((r,i)=>{const y=1.72+i*1.42;
+    s2.addShape(RECT,{x:0.72,y,w:3.6,h:1.2,fill:{color:"F5F5F5"},line:{color:"E9E9E9",width:0.5}});
+    s2.addText(r[0],{x:0.72,y:y+0.14,w:3.6,h:0.3,fontSize:11,color:"677070",align:"center",fontFace:F});
+    s2.addText(r[1],{x:0.72,y:y+0.5,w:3.6,h:0.5,fontSize:18,bold:true,color:"2C2C2A",align:"center",fontFace:F});
+    s2.addText("›",{x:4.32,y:y+0.3,w:0.43,h:0.5,fontSize:20,color:"B4B2A9",align:"center",fontFace:F});
+    s2.addShape(RECT,{x:4.75,y,w:3.6,h:1.2,fill:{color:"EAF5FB"},line:{color:"C2E4F2",width:0.5}});
+    s2.addText(r[0],{x:4.75,y:y+0.14,w:3.6,h:0.3,fontSize:11,color:"185FA5",align:"center",fontFace:F});
+    s2.addText(r[2],{x:4.75,y:y+0.5,w:3.6,h:0.5,fontSize:18,bold:true,color:"0C447C",align:"center",fontFace:F});
+    s2.addText("›",{x:8.6,y:y+0.3,w:0.5,h:0.5,fontSize:20,color:"1599C5",align:"center",fontFace:F});});
+  s2.addShape(RECT,{x:9.2,y:1.66,w:3.4,h:3.98,fill:{color:"FFFFFF"},line:{color:"1599C5",width:1.5}});
+  rowsA.forEach((r,i)=>{const y=1.8+i*1.26;
+    s2.addShape(RECT,{x:9.35,y,w:3.1,h:1.08,fill:{color:"1599C5"}});
+    s2.addText(r[3],{x:9.4,y:y+0.3,w:3.0,h:0.5,fontSize:15,bold:true,color:"FFFFFF",align:"center",fontFace:F});});
+
+  // ---- Slide3: ユーザー側の期待効果（前後比較 → 財務インパクト） ----
+  const uBef=num("empMinDay"), uRate=num("empRate")/100, uAft=Math.round(uBef*(1-uRate)*10)/10;
+  const uSavedMo=num("empCount")*(uBef*uRate)*WD_MONTH/60, uSavedYr=uSavedMo*12;
+  const s3=pptx.addSlide();chrome(s3,"ユーザー側の期待効果（全社展開後）","調べ物時間の削減により、年間 "+fmt(userA)+" "+un+"のインパクトを創出");
+  s3.addText("調べ物時間の削減",{x:0.72,y:1.4,w:5.5,h:0.3,fontSize:13,bold:true,color:"2C2C2A",fontFace:F});
+  const uL=[["対象ユーザー",num("empCount").toLocaleString()+" 名"],["削減率",num("empRate")+" %"],
+            ["導入前 調べ物時間",uBef+" 分/日"],["導入後 調べ物時間",uAft+" 分/日"]];
+  uL.forEach((d,i)=>{const x=0.72+(i%2)*2.9, y=1.85+Math.floor(i/2)*1.5;
+    s3.addShape(RECT,{x,y,w:2.65,h:1.3,fill:{color:"F5F5F5"},line:{color:"E9E9E9",width:0.5}});
+    s3.addText(d[0],{x,y:y+0.18,w:2.65,h:0.3,fontSize:11,color:"677070",align:"center",fontFace:F});
+    s3.addText(d[1],{x,y:y+0.55,w:2.65,h:0.5,fontSize:18,bold:true,color:"2C2C2A",align:"center",fontFace:F});});
+  s3.addText("財務インパクト",{x:7.0,y:1.4,w:5.6,h:0.3,fontSize:13,bold:true,color:"2C2C2A",fontFace:F});
+  const uR=[["月間の削減時間",Math.round(uSavedMo).toLocaleString()+" 時間/月","EAF5FB","0C447C","185FA5"],
+            ["年間の削減時間",Math.round(uSavedYr).toLocaleString()+" 時間/年","EAF5FB","0C447C","185FA5"],
+            ["年間インパクト","¥"+fmt(userA)+" "+un+"/年","1599C5","FFFFFF","FFFFFF"]];
+  uR.forEach((d,i)=>{const y=1.85+i*1.4;
+    s3.addShape(RECT,{x:7.0,y,w:5.6,h:1.08,fill:{color:d[2]},line:{color:d[2]==="EAF5FB"?"C2E4F2":d[2],width:0.5}});
+    s3.addText(d[0],{x:7.0,y:y+0.16,w:5.6,h:0.3,fontSize:11,color:d[4],align:"center",fontFace:F});
+    s3.addText(d[1],{x:7.0,y:y+0.48,w:5.6,h:0.5,fontSize:20,bold:true,color:d[3],align:"center",fontFace:F});
+    if(i<2)s3.addText("▼",{x:7.0,y:y+1.06,w:5.6,h:0.3,fontSize:12,color:"1599C5",align:"center",fontFace:F});});
+
+  // ---- Slide3: Appendix 区切り ----
+  const sap=pptx.addSlide();sap.background={color:"1599C5"};
+  sap.addText("Appendix",{x:0,y:2.7,w:13.33,h:1.0,fontSize:40,bold:true,color:"FFFFFF",align:"center",fontFace:F});
+  sap.addText("投資回収・費用の詳細（社内検討用）",{x:0,y:3.9,w:13.33,h:0.5,fontSize:16,color:"EAF5FB",align:"center",fontFace:F});
+  sap.addText("© PKSHA Technology Inc.",{x:8.9,y:7.08,w:3.9,h:0.3,fontSize:9,color:"EAF5FB",align:"right",fontFace:F});
+
+  // ---- Slide4: 結論サマリー ----
+  const s1=pptx.addSlide();chrome(s1,"費用対効果サマリー",assumptionText());
   const hero=[["投資回収",pb?pb+" ヶ月目":"3年内未回収"],["3年 ROI",(roi>=0?"+":"")+roi+" %"],["3年 純便益",signed(net3)+" "+un]];
   hero.forEach((d,i)=>{const x=0.72+i*4.12;
     s1.addShape(RECT,{x,y:1.55,w:3.9,h:1.55,fill:{color:"1599C5"}});
@@ -419,22 +474,13 @@ async function exportPPTX(){
     s1.addText(d[1],{x:x+0.25,y:4.22,w:3.5,h:0.5,fontSize:18,bold:true,color:"111111",fontFace:F});});
   s1.addText("3年累計削減（対応側＋ユーザー側） ¥"+fmt(ben3)+" "+un,{x:0.72,y:5.2,w:12,h:0.4,fontSize:13,bold:true,color:"1599C5",fontFace:F});
 
-  // ---- Slide2: 効果とグラフ ----
-  const s2=pptx.addSlide();chrome(s2,"削減効果と投資回収の推移");
-  const eff=[["1年後の対応側効果","¥"+fmt(deptA)+" "+un+"/年","3年累計 ¥"+fmt(dept3)+" "+un,"問い合わせに対応する側（情シス等）の工数削減"],
-             ["全社展開後のユーザー側効果","¥"+fmt(userA)+" "+un+"/年","3年累計 ¥"+fmt(user3)+" "+un,"問い合わせをするユーザー（社員）側の時間削減"]];
-  eff.forEach((d,i)=>{const x=0.72+i*6.15;
-    s2.addShape(RECT,{x,y:1.4,w:5.85,h:1.55,fill:{color:"EAF5FB"},line:{color:"C2E4F2",width:1}});
-    s2.addText(d[0],{x:x+0.28,y:1.52,w:5.4,h:0.3,fontSize:12,bold:true,color:"111111",fontFace:F});
-    s2.addText(d[1],{x:x+0.28,y:1.85,w:5.4,h:0.5,fontSize:21,bold:true,color:"1599C5",fontFace:F});
-    s2.addText(d[2],{x:x+0.28,y:2.4,w:5.4,h:0.3,fontSize:11,color:"444444",fontFace:F});
-    s2.addText(d[3],{x:x+0.28,y:2.66,w:5.4,h:0.3,fontSize:9,color:"777777",fontFace:F});});
-  s2.addText("累計コスト vs 累計削減額（3年）",{x:0.72,y:3.15,w:12,h:0.3,fontSize:12,bold:true,color:"111111",fontFace:F});
+  // ---- Slide5: 累計グラフ ----
+  const s4=pptx.addSlide();chrome(s4,"累計コスト vs 累計削減額（3年）","累計削減が累計コストを上回る時点が投資回収。回収 "+(pb?pb+"ヶ月目":"3年内未回収"));
   const svg=document.querySelector("#chart svg");
-  if(svg){const im=await svgToPng(svg,2);const iw=9.4,ih=iw*(im.h/im.w);s2.addImage({data:im.data,x:(13.33-iw)/2,y:3.5,w:iw,h:ih});}
+  if(svg){const im=await svgToPng(svg,2);const iw=11.0,ih=iw*(im.h/im.w);s4.addImage({data:im.data,x:(13.33-iw)/2,y:1.75,w:iw,h:ih});}
 
-  // ---- Slide3: フェーズ別表 ----
-  const s3=pptx.addSlide();chrome(s3,"フェーズ別 費用対効果");
+  // ---- Slide6: フェーズ別表（社内検討用） ----
+  const s5=pptx.addSlide();chrome(s5,"フェーズ別 費用対効果（社内検討用）");
   const hd=["","自己解決率","対応側削減("+un+")","ユーザー側効果("+un+")","累計削減計("+un+")","累計コスト("+un+")","累計損益("+un+")"]
     .map(t=>({text:t,options:{bold:true,color:"FFFFFF",fill:{color:"1599C5"},align:"center",fontSize:10,valign:"middle"}}));
   const rows=[hd];
@@ -448,8 +494,8 @@ async function exportPPTX(){
       {text:fmt(c),options:{align:"right"}},
       {text:signed(net),options:{align:"right",bold:true,color:net>=0?"1599C5":"677070"}},
     ]);});
-  s3.addTable(rows,{x:0.72,y:1.6,w:11.9,fontFace:F,fontSize:11,border:{type:"solid",color:"E9E9E9",pt:0.5},valign:"middle",rowH:0.5,color:"333333"});
-  s3.addText("投資回収＝累計削減（対応側＋ユーザー側）が累計コストを初めて上回る月。前提： "+assumptionText(),{x:0.72,y:5.6,w:11.9,h:0.6,fontSize:9,color:"777777",fontFace:F});
+  s5.addTable(rows,{x:0.72,y:1.6,w:11.9,fontFace:F,fontSize:11,border:{type:"solid",color:"E9E9E9",pt:0.5},valign:"middle",rowH:0.5,color:"333333"});
+  s5.addText("投資回収＝累計削減（対応側＋ユーザー側）が累計コストを初めて上回る月。前提： "+assumptionText(),{x:0.72,y:5.6,w:11.9,h:0.6,fontSize:9,color:"777777",fontFace:F});
 
   const dt=new Date(),ymd=dt.getFullYear()+String(dt.getMonth()+1).padStart(2,"0")+String(dt.getDate()).padStart(2,"0");
   await pptx.writeFile({fileName:"PKSHA_AIHD_費用対効果_"+ymd+".pptx"});
@@ -531,8 +577,10 @@ function render(){
   ["rollSy","rollSm"].forEach(id=>document.getElementById(id).disabled=!state.roll);
 
   const A=annualHours(),w=num("wage"),empMin=num("empMinDay");
+  const empRateV=num("empRate")/100, empAfter=empMin*(1-empRateV), empCut=empMin*empRateV;
+  const savedMoHours=num("empCount")*empCut*WD_MONTH/60;
   document.getElementById("derived").innerHTML=`年間対応工数 ≒ <b>${Math.round(A).toLocaleString()}h/年</b>（${num("qtyMonth").toLocaleString()}件 × 12 × ${num("minPerCase")}分 ÷60）<br>100%自己解決時の上限効果 ≒ <b>¥${fmt(A*w)} ${U()}/年</b>`;
-  document.getElementById("empConv").innerHTML=`週換算 ${(empMin*WD_WEEK).toLocaleString()}分 ／ 月換算 ${Math.round(empMonthlyHours())}h（週${WD_WEEK}日・月${WD_MONTH}日換算）`;
+  document.getElementById("empConv").innerHTML=`導入前 ${empMin}分/日 → 導入後 ${(Math.round(empAfter*10)/10)}分/日（削減 ${(Math.round(empCut*10)/10)}分/日）／ 月間削減 約${Math.round(savedMoHours).toLocaleString()}h（月${WD_MONTH}日換算）`;
 
   const cs=costSeries();
   const cost3=cs.cumCost(36),ben3=cumBenefit(36),net3=ben3-cost3,pb=payback(cs),roi=cost3>0?Math.round(net3/cost3*100):0;
@@ -560,7 +608,7 @@ function render(){
     <h3>全社展開後のユーザー側効果（問い合わせをする社員側）</h3>
     <div class="big">¥${fmt(userAnnual)} <small>${U()}/年</small></div>
     <div class="sub">3年累計 ¥${fmt(user3)} ${U()}（${on?state.rollSy+'年'+state.rollSm+'月〜':'開始月から'}）</div>
-    <div class="formula">対象 ${num("empCount").toLocaleString()}名 × 月${Math.round(empMonthlyHours())}h（${empMin}分/日）× 適用率${num("empRate")}% × 時給${w.toLocaleString()}円<br>
+    <div class="formula">対象 ${num("empCount").toLocaleString()}名 × 導入前 ${empMin}分/日 → 導入後 ${(Math.round(empAfter*10)/10)}分/日（削減率${num("empRate")}%）× 時給${w.toLocaleString()}円<br>
     ${on?`<b style="color:var(--blue)">全社展開（${state.rollSy}年${state.rollSm}月）以降、毎月の削減に加算され投資回収を前倒しします。</b>`:'「合算する」をONにすると、指定月からROI本体に加算されます。'}</div>`;
 
   // 結論ヘッドライン（投資回収）
@@ -575,7 +623,7 @@ function render(){
     `<b>${state.plan}万円プラン</b>・Web${state.web?'有':'無'}${D}`+
     `対応側 <b>${num("qtyMonth").toLocaleString()}件/月</b>×${num("minPerCase")}分×¥${w.toLocaleString()}${D}`+
     `回答支援 ${state.sup?`<b>${state.supSy}/${state.supSm}〜</b>`:'なし'}${D}`+
-    `ユーザー側 ${state.roll?`<b>${num("empCount").toLocaleString()}名</b>×${empMin}分/日×${num("empRate")}%（${state.rollSy}/${state.rollSm}〜合算）`:'参考のみ'}${D}`+
+    `ユーザー側 ${state.roll?`<b>${num("empCount").toLocaleString()}名</b>×導入前${empMin}分/日×削減率${num("empRate")}%（${state.rollSy}/${state.rollSm}〜合算）`:'参考のみ'}${D}`+
     `導入 ${state.startYear}/${state.startMonth}`;
 
   document.getElementById("chart").innerHTML=chart(cs);
