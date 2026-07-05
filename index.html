@@ -139,6 +139,31 @@
   .mtbl td.z{color:var(--lightGray);}
   footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--borderGray);display:flex;justify-content:space-between;color:var(--text3);font-size:10px;}
   .note{font-size:11px;color:var(--text3);margin:10px 0 0;line-height:1.6;}
+  .subrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .mode-badge{font-size:11px;font-weight:700;padding:3px 11px;border-radius:12px;white-space:nowrap;}
+  .mode-badge.editor{background:var(--blueTint);color:var(--blue);border:1px solid var(--blueBorder);}
+  .mode-badge.viewer{background:var(--blue);color:#fff;}
+  .help-btn{margin-left:auto;margin-right:56px;padding:7px 14px;border:1px solid var(--blue);background:var(--white);color:var(--blue);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .help-btn:hover{background:var(--blueTint);}
+  .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;padding:24px;overflow-y:auto;}
+  .modal-ov.open{display:flex;align-items:flex-start;justify-content:center;}
+  .modal{background:var(--white);border-radius:10px;max-width:760px;width:100%;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.2);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--borderGray);position:sticky;top:0;background:var(--white);border-radius:10px 10px 0 0;}
+  .modal-head h2{font-size:16px;font-weight:700;margin:0;padding-left:10px;border-left:4px solid var(--blue);}
+  .modal-x{width:32px;height:32px;border:1px solid var(--borderGray);background:var(--white);border-radius:6px;font-size:18px;line-height:1;color:var(--text3);cursor:pointer;}
+  .modal-x:hover{background:var(--paleGray);}
+  .modal-body{padding:18px 24px 26px;font-size:13px;color:var(--text2);line-height:1.75;}
+  .modal-body .lead{background:var(--blueTint);border-left:4px solid var(--blue);border-radius:4px;padding:12px 14px;margin:0 0 18px;color:var(--black);}
+  .modal-body h3{font-size:13px;font-weight:700;color:var(--black);margin:20px 0 8px;padding-left:9px;border-left:4px solid var(--blueBorder);}
+  .modal-body ul,.modal-body ol{margin:0;padding-left:22px;}
+  .modal-body li{margin-bottom:6px;}
+  .modal-body b{color:var(--black);}
+  .modal-body ol.flow{background:var(--blueTint);border:1px solid var(--blueBorder);border-radius:6px;padding:12px 14px 12px 34px;margin:0 0 4px;}
+  .modal-body ol.flow li{margin-bottom:8px;}
+  .modal-body ol.flow li:last-child{margin-bottom:0;}
+  .modal-body .only-viewer{display:none;}
+  .modal-ov.viewer .modal-body .only-editor{display:none;}
+  .modal-ov.viewer .modal-body .only-viewer{display:block;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
@@ -146,8 +171,9 @@
 <div class="wrap">
   <header>
     <div class="tri"></div><div class="tri2"></div>
-    <div class="title-row"><div class="title-bar"></div><h1>PKSHA AIヘルプデスク 費用対効果シミュレーター</h1></div>
-    <p class="sub">費用・削減効果・投資回収を一体で試算。対応側とユーザー側の効果を合算できます</p>
+    <div class="title-row"><div class="title-bar"></div><h1>PKSHA AIヘルプデスク 費用対効果シミュレーター</h1><span id="modeBadge" class="mode-badge editor">営業用</span></div>
+    <div class="subrow"><p class="sub">費用・削減効果・投資回収を一体で試算。対応側とユーザー側の効果を合算できます</p>
+      <button id="helpBtn" class="help-btn">？ 使い方</button></div>
   </header>
 
   <div class="grid">
@@ -275,6 +301,74 @@
     </div>
   </div>
   <footer><span>Confidential</span><span>© PKSHA Technology Inc.</span></footer>
+
+  <div class="modal-ov" id="helpModal" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-head"><h2>このシミュレーターの使い方</h2><button class="modal-x" id="helpClose">×</button></div>
+      <div class="modal-body">
+        <div class="only-editor">
+          <p class="lead">PKSHA AIヘルプデスク導入の費用対効果を、<b>対応側</b>（問い合わせに対応する情シス等）と<b>ユーザー側</b>（問い合わせをする社員）の両面から試算し、投資回収・ROIを可視化するツールです。</p>
+          <h3>想定する使い方の流れ（営業 → 顧客）</h3>
+          <ol class="flow">
+            <li><b>営業側（この原本で作成）</b>：顧客に合わせて件数・時給・削減率などの数値を入力・調整します。</li>
+            <li><b>共有リンクを送付</b>：「共有リンクをコピー」で条件を埋め込んだURLを発行し、顧客へ送ります。</li>
+            <li><b>顧客側で微調整</b>：顧客は受け取ったリンクを開き、自社の実態に合わせて数値を微調整します（共有リンクではコピー機能は非表示ですが、<b>PowerPoint書き出しは利用できます</b>）。</li>
+            <li><b>顧客が最終出力</b>：確定した数値で「PowerPointに書き出し」を実行し、<b>社内の上申支援資料</b>として活用してもらいます。</li>
+          </ol>
+        </div>
+        <div class="only-viewer">
+          <p class="lead">本シミュレーターは、PKSHA担当者からお送りした、貴社向けの費用対効果の試算です。数値を貴社の実態に合わせて調整いただき、投資回収・ROIをご確認いただけます。ご検討・社内上申の資料としてご活用ください。</p>
+          <h3>ご利用の流れ</h3>
+          <ol class="flow">
+            <li><b>数値をご確認・調整</b>：件数・時給・削減率など、貴社の実態に合わせて数値を調整してください。</li>
+            <li><b>結果をご確認</b>：右側で投資回収・ROI・効果をご確認いただけます（表示単位は円／万円で切替可能）。</li>
+            <li><b>PowerPointに書き出し</b>：確定した数値で「PowerPointに書き出し」を実行してください。</li>
+            <li><b>上申資料として活用</b>：出力したスライドを、社内のご検討・上申資料としてご活用ください。</li>
+          </ol>
+        </div>
+
+        <h3>基本の流れ（左で入力 → 右で結果）</h3>
+        <ol>
+          <li><b>費用条件</b>：プラン・Web画面設定・追加オプションを選択。詳細は「基本パッケージ費用」「回答支援機能」「追加機能」で調整できます。</li>
+          <li><b>対応側の効果</b>：月間問い合わせ件数・1件あたり対応時間・時給・自己解決率（3〜36ヶ月の立ち上がり）を入力。</li>
+          <li><b>ユーザー側の効果</b>：ROIへの合算ON/OFF、全社展開の開始時期、対象人数、導入前の調べ物時間、削減率を入力。</li>
+        </ol>
+
+        <h3>結果の見方（右側）</h3>
+        <ul>
+          <li><b>前提サマリーバー</b>：現在の入力条件の要約。資料に添える前提として使えます。</li>
+          <li><b>費用</b>：初期費用・基本月額・3年累計コスト。</li>
+          <li><b>対応側の効果／ユーザー側の効果</b>：それぞれの年間効果と3年累計。</li>
+          <li><b>投資回収ヘッドライン</b>：投資回収月・3年ROI・3年純便益。</li>
+          <li><b>グラフ</b>：累計コストと累計削減の交差点が投資回収。回収前はグレー（赤字）、回収後はブルー（黒字）で表示。</li>
+          <li><b>フェーズ別 費用対効果</b>：3/6/12/24/36ヶ月の内訳（社内検討用）。</li>
+        </ul>
+
+        <h3>便利な機能</h3>
+        <ul class="only-editor">
+          <li><b>表示単位</b>：円／万円を切り替え。</li>
+          <li><b>共有リンクをコピー</b>：入力条件を埋め込んだURLを発行。顧客ごとにリンクを作れ、開くと同じ前提で再現されます。共有リンクではコピー機能は非表示ですが、<b>PowerPoint書き出しは利用できます</b>。</li>
+          <li><b>PowerPointに書き出し</b>：現在の数値でスライドを生成します。①対応側の期待効果 ②ユーザー側の期待効果 ③Appendix（投資回収サマリー・累計グラフ・フェーズ別表）。顧客の社内上申資料にそのまま貼れます。</li>
+        </ul>
+        <ul class="only-viewer">
+          <li><b>表示単位</b>：円／万円を切り替えできます。</li>
+          <li><b>PowerPointに書き出し</b>：現在の数値でスライドを生成します。①対応側の期待効果 ②ユーザー側の期待効果 ③Appendix（投資回収サマリー・累計グラフ・詳細表）。そのまま社内資料に貼り付けてご利用いただけます。</li>
+        </ul>
+
+        <h3>ご利用上の注意</h3>
+        <ul class="only-editor">
+          <li>試算は入力した前提に基づく<b>概算</b>です。提示時は前提（件数・時給・削減率など）を必ず添えてください。</li>
+          <li>対応側の「導入後」は<b>12ヶ月時点</b>の自己解決率を基準に算出します。</li>
+          <li>共有リンク・PowerPoint書き出しは、<b>Web公開版</b>で確実に動作します。</li>
+        </ul>
+        <ul class="only-viewer">
+          <li>本試算は、入力いただいた前提に基づく<b>概算</b>です。実際の効果を保証するものではありません。</li>
+          <li>対応側の「導入後」は<b>導入から12ヶ月時点</b>の自己解決率を基準に算出しています。</li>
+          <li>ご不明点は、担当のPKSHAメンバーまでお問い合わせください。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -633,11 +727,23 @@ function render(){
   updateShareUrl();
 }
 
+/* ===== 使い方モーダル ===== */
+(function(){const ov=document.getElementById("helpModal"),ob=document.getElementById("helpBtn"),oc=document.getElementById("helpClose");
+  if(!ov||!ob)return;
+  const open=()=>{ov.classList.add("open");ov.setAttribute("aria-hidden","false");};
+  const close=()=>{ov.classList.remove("open");ov.setAttribute("aria-hidden","true");};
+  ob.onclick=open;if(oc)oc.onclick=close;
+  ov.addEventListener("click",e=>{if(e.target===ov)close();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+})();
+
 (function init(){
   const h=location.hash||"";
   const i=h.indexOf("d=");
   if(i>=0)applyShare(h.slice(i+2));
-  if(IS_VIEWER){const ec=document.getElementById("editorControls");if(ec)ec.style.display="none";}
+  if(IS_VIEWER){["shareUrl","copyBtn","copyMsg"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+    const hm=document.getElementById("helpModal");if(hm)hm.classList.add("viewer");
+    const mb=document.getElementById("modeBadge");if(mb){mb.textContent="顧客提示用（共有リンク）";mb.className="mode-badge viewer";}}
   renderFeatures();render();
 })();
 </script>
